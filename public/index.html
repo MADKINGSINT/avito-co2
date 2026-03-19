@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Авито ЦО-2 — Купи ученика!</title>
+  <meta name="description" content="Шуточный маркетплейс учеников Кудровского ЦО №2. Покупай, продавай, зарабатывай!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css?v=3">
+</head>
+<body>
+  <!-- AUTH OVERLAY -->
+  <div id="auth-overlay" class="auth-overlay hidden">
+    <div class="auth-modal">
+      <div class="auth-logo">🏫</div>
+      <h1>Авито ЦО-2</h1>
+      <p class="auth-subtitle">Кудровский центр образования № 2</p>
+      
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">Войти</button>
+        <button id="tab-register" class="auth-tab" onclick="switchTab('register')">Зарегистрироваться</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-login" onsubmit="doLogin(event)">
+        <div class="input-group">
+          <label>Логин</label>
+          <input type="text" id="login-username" placeholder="Введи логин" required>
+        </div>
+        <div class="input-group">
+          <label>Пароль</label>
+          <input type="password" id="login-password" placeholder="Введи пароль" required>
+        </div>
+        <p id="login-error" class="form-error hidden"></p>
+        <button type="submit" class="btn btn-primary btn-wide">🚪 Войти</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="form-register" class="hidden" onsubmit="doRegister(event)">
+        <div class="input-group">
+          <label>Имя (как тебя звать)</label>
+          <input type="text" id="reg-display" placeholder="Например: Вася Пупкин" required>
+        </div>
+        <div class="input-group">
+          <label>Логин</label>
+          <input type="text" id="reg-username" placeholder="Латиницей, без пробелов" required>
+        </div>
+        <div class="input-group">
+          <label>Пароль</label>
+          <input type="password" id="reg-password" placeholder="Минимум 4 символа" required>
+        </div>
+        <p id="reg-error" class="form-error hidden"></p>
+        <p class="form-bonus">🎁 При регистрации — 100 рублей в подарок!</p>
+        <button type="submit" class="btn btn-primary btn-wide">✅ Зарегистрироваться</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <span class="header-logo">🏫</span>
+        <span class="header-title">Авито<span class="header-title-accent"> ЦО-2</span></span>
+      </div>
+      <div class="header-center">
+        <nav class="nav">
+          <button class="nav-btn active" onclick="showPage('market')" id="nav-market">🛒 Маркет</button>
+          <button class="nav-btn" onclick="showPage('sell')" id="nav-sell">📋 Продать</button>
+          <button class="nav-btn" onclick="showPage('tapper')" id="nav-tapper">👆 Тапалка</button>
+          <button class="nav-btn" onclick="showPage('inventory')" id="nav-inventory">🎒 Инвентарь</button>
+          <button class="nav-btn admin-btn hidden" onclick="showPage('admin')" id="nav-admin">👨‍💼 Директор</button>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="balance-badge" id="balance-display">
+          <span class="balance-icon">💰</span>
+          <span id="balance-amount">0</span> ₽
+        </div>
+        <div class="user-info" onclick="showUserMenu()">
+          <span id="user-display-name">Гость</span>
+          <span class="user-chevron">▾</span>
+        </div>
+        <div class="user-menu hidden" id="user-menu">
+          <button onclick="doLogout()">🚪 Выйти</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <main class="main">
+
+      <!-- MARKET PAGE -->
+      <div id="page-market" class="page active">
+        <div class="page-header">
+          <h2>🛒 Ученики в продаже</h2>
+          <div class="filter-bar">
+            <input type="text" id="search-input" placeholder="🔍 Поиск по имени..." oninput="filterStudents()" class="search-input">
+            <select id="filter-status" onchange="filterStudents()" class="filter-select">
+              <option value="available" selected>Доступные</option>
+              <option value="all">Все</option>
+              <option value="sold">Проданные</option>
+            </select>
+          </div>
+        </div>
+        <div id="students-grid" class="students-grid">
+          <div class="loading-spinner">Загружаем учеников...</div>
+        </div>
+      </div>
+
+      <!-- SELL PAGE -->
+      <div id="page-sell" class="page">
+        <div class="page-header">
+          <h2>📋 Выставить ученика на продажу</h2>
+          <p class="page-sub">18+ шутка. Никто реально не продаётся. <br>⚠️ Комиссия за выставление: <strong style="color:var(--gold)">250 ₽</strong></p>
+        </div>
+        <div class="sell-form-wrapper">
+          <form id="sell-form" onsubmit="submitStudent(event)" enctype="multipart/form-data">
+            <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+              <div id="photo-preview-wrap">
+                <div id="photo-placeholder">
+                  <span class="upload-icon">📸</span>
+                  <span>Нажми чтобы загрузить фото</span>
+                  <span class="upload-hint">JPG, PNG, GIF до 5MB</span>
+                </div>
+                <img id="photo-preview-img" class="hidden" alt="Preview">
+              </div>
+              <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="previewPhoto(event)">
+            </div>
+
+            <div class="form-row">
+              <div class="input-group">
+                <label>Имя ученика *</label>
+                <input type="text" id="s-name" placeholder="Например: Петя Иванов" required>
+              </div>
+              <div class="input-group">
+                <label>Цена (₽) *</label>
+                <input type="number" id="s-price" placeholder="Например: 500" min="1" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Описание</label>
+              <textarea id="s-desc" placeholder="Расскажи о достоинствах ученика: умеет списывать, хорошо бегает от учителей..." rows="4"></textarea>
+            </div>
+
+            <p id="sell-error" class="form-error hidden"></p>
+            <p id="sell-success" class="form-success hidden"></p>
+            <button type="submit" class="btn btn-primary btn-wide">🚀 Выставить на продажу</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAPPER PAGE -->
+      <div id="page-tapper" class="page">
+        <div class="tapper-container">
+          <h2>👆 Тапалка</h2>
+          <p class="tapper-desc">Тапай по ученику, чтобы заработать рубли!</p>
+          <div class="tapper-balance">
+            <span>💰 Твой баланс: </span>
+            <span id="tapper-balance" class="tapper-balance-amount">0</span> ₽
+          </div>
+          <div class="tapper-rate">+1 ₽ за тап</div>
+          
+          <div class="tapper-area">
+            <div class="coin-burst" id="coin-burst"></div>
+            <button class="tapper-btn" id="tapper-btn" onclick="doTap()">
+              <span class="tapper-emoji">🧒</span>
+            </button>
+          </div>
+          
+          <div class="tapper-stats">
+            <div class="stat-box">
+              <span class="stat-label">Тапов за сессию</span>
+              <span id="session-taps" class="stat-value">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Заработано сейчас</span>
+              <span id="session-earned" class="stat-value">0 ₽</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY PAGE -->
+      <div id="page-inventory" class="page">
+        <div class="page-header">
+          <h2>🎒 Мой инвентарь</h2>
+          <p class="page-sub">Купленные тобой ученики — можно перепродать!</p>
+        </div>
+        <div id="inventory-grid" class="students-grid">
+          <div class="loading-spinner">Загружаем...</div>
+        </div>
+      </div>
+
+      <!-- ADMIN PAGE -->
+      <div id="page-admin" class="page">
+        <div class="page-header">
+          <h2>👨‍💼 Панель директора</h2>
+          <p class="page-sub">Управление пользователями и рублями</p>
+        </div>
+        
+        <div class="admin-grid">
+          <div class="admin-card">
+            <h3>💸 Выдать рубли</h3>
+            <div class="input-group">
+              <label>Пользователь</label>
+              <select id="admin-user-select" class="form-select">
+                <option value="">Выбери пользователя...</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Сумма (₽)</label>
+              <input type="number" id="admin-amount" placeholder="Например: 1000" min="1">
+            </div>
+            <p id="admin-give-error" class="form-error hidden"></p>
+            <p id="admin-give-success" class="form-success hidden"></p>
+            <button class="btn btn-primary" onclick="adminGiveRubles()">💸 Выдать</button>
+          </div>
+
+          <div class="admin-card">
+            <h3>👥 Все пользователи</h3>
+            <div id="admin-users-list" class="admin-users-list">
+              <div class="loading-spinner">Загрузка...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Student Card Modal -->
+  <div id="student-modal" class="modal-overlay hidden" onclick="closeModal(event)">
+    <div class="modal-card" id="modal-card">
+      <button class="modal-close" onclick="closeStudentModal()">✕</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="/app.js?v=4"></script>
+</body>
+</html>

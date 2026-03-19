@@ -1,0 +1,3 @@
+{"$$indexCreated":{"fieldName":"username","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"username","unique":true}}
+{"username":"admin","password":"$2a$10$VuDk4A7cXa67QXZCeG8AKearTBU0.ANtAZH8V.7y1a5rYw4MAT4s6","display_name":"Директор","rubles":999999,"is_admin":true,"created_at":{"$$date":1773938172100},"_id":"Fp0tnwMbUzPfQimy"}
