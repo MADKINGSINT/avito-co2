@@ -375,30 +375,50 @@ function spawnCoinParticle() {
 // ======================== ADMIN ========================
 async function loadAdminData() {
   const users = await apiFetch('/api/admin/users');
-  if (!Array.isArray(users)) return;
+  const userSelect = document.getElementById('admin-user-select');
+  const userList = document.getElementById('admin-users-list');
+  const studentList = document.getElementById('admin-students-list');
   
-  // Populate select
-  const sel = document.getElementById('admin-user-select');
-  sel.innerHTML = '<option value="">Выбери пользователя...</option>';
-  
-  // Render users list
-  const list = document.getElementById('admin-users-list');
-  list.innerHTML = users.map(u => `
+  if (users.error) {
+    userList.innerHTML = `<p class="form-error">${users.error}</p>`;
+    studentList.innerHTML = `<p class="form-error">${users.error}</p>`;
+    return;
+  }
+
+  userSelect.innerHTML = '<option value="">Выбери пользователя...</option>' + 
+    users.map(u => `<option value="${u._id}">${u.display_name} (${u.username})</option>`).join('');
+
+  userList.innerHTML = users.map(u => `
     <div class="admin-user-row">
       <div class="admin-user-info">
-        <div class="admin-user-name">${escHtml(u.display_name)} ${u.is_admin ? '<span class="admin-badge">ДИРЕКТОР</span>' : ''}</div>
+        <div class="admin-user-name">${escHtml(u.display_name)} ${u.is_admin ? '<span class="admin-badge">Admin</span>' : ''}</div>
         <div class="admin-user-sub">@${escHtml(u.username)}</div>
       </div>
       <div class="admin-user-balance">${u.rubles.toLocaleString('ru-RU')} ₽</div>
     </div>
   `).join('');
-  
-  users.forEach(u => {
-    const opt = document.createElement('option');
-    opt.value = u.id;
-    opt.textContent = `${u.display_name} (@${u.username}) — ${u.rubles} ₽`;
-    sel.appendChild(opt);
-  });
+
+  // Render all students for moderation
+  if (allStudents.length === 0) await loadStudents();
+  studentList.innerHTML = allStudents.map(s => `
+    <div class="admin-user-row">
+      <div class="admin-user-info">
+        <div class="admin-user-name">${escHtml(s.name)} ${s.status === 'sold' ? '<span class="status-badge status-sold" style="position:static;padding:2px 6px">Продан</span>' : ''}</div>
+        <div class="admin-user-sub">Продавец: ${escHtml(s.seller_name)} | Цена: ${s.price.toLocaleString('ru-RU')} ₽</div>
+      </div>
+      <button class="btn btn-danger" style="padding: 6px 10px; font-size: 0.8rem;" onclick="adminDeleteStudent('${s._id || s.id}')">Удалить</button>
+    </div>
+  `).join('');
+  if (allStudents.length === 0) studentList.innerHTML = '<p class="text-muted" style="padding:10px">Нет объявлений</p>';
+}
+
+async function adminDeleteStudent(id) {
+  if (!confirm('Точно удалить это объявление насовсем?')) return;
+  const data = await apiFetch(`/api/students/${id}`, { method: 'DELETE' });
+  if (data.error) { showToast(data.error, 'error'); return; }
+  showToast('Объявление удалено', 'success');
+  await loadStudents(); // refresh allStudents
+  loadAdminData(); // refresh admin panel
 }
 
 async function adminGiveRubles() {

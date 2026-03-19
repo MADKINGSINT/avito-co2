@@ -8,7 +8,7 @@ const fs = require('fs');
 const Datastore = require('@seald-io/nedb');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 6134;
 
 // Ensure directories exist
 ['./uploads', './data'].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
@@ -16,6 +16,11 @@ const PORT = 3000;
 // Databases
 const usersDB = new Datastore({ filename: './data/users.db', autoload: true });
 const studentsDB = new Datastore({ filename: './data/students.db', autoload: true });
+
+// NeDB is an append-only database (like CouchDB). Updates append new lines instead of rewriting the file.
+// We must set auto-compaction so the files don't grow infinitely with repeated taps.
+usersDB.setAutocompactionInterval(1000 * 60 * 5); // Compact every 5 mins
+studentsDB.setAutocompactionInterval(1000 * 60 * 60); // Compact hourly
 const tapsDB = new Datastore({ filename: './data/taps.db', autoload: true });
 
 // Indexes
@@ -62,7 +67,16 @@ const upload = multer({
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+// Static files (disable cache for HTML so index updates propagate immediately)
+app.use(express.static('public', {
+  setHeaders: (res, pathUrl) => {
+    if (pathUrl.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 app.use('/uploads', express.static('uploads'));
 app.use(session({
   store: new FileStore({ path: './data/sessions', retries: 0, ttl: 7 * 24 * 3600 }),
